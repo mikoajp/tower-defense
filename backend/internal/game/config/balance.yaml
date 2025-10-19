@@ -1,0 +1,109 @@
+# Game Balance Configuration
+# All game parameters in one place for easy tuning
+
+game:
+  starting_gold: 100
+  starting_lives: 20
+  tick_rate_ms: 16  # ~60 FPS
+  broadcast_interval_ms: 100
+
+towers:
+  basic:
+    cost: 50
+    range: 100.0
+    damage: 10
+    fire_rate: 1.0  # shots per second
+    
+  # Future tower types
+  sniper:
+    cost: 100
+    range: 200.0
+    damage: 50
+    fire_rate: 0.5
+    
+  splash:
+    cost: 75
+    range: 80.0
+    damage: 5
+    fire_rate: 2.0
+    splash_radius: 30.0
+
+enemies:
+  basic:
+    hp: 50
+    speed: 1.0
+    gold_reward: 10
+    score_reward: 10
+    
+  fast:
+    hp: 30
+    speed: 2.0
+    gold_reward: 15
+    score_reward: 15
+    
+  tank:
+    hp: 150
+    speed: 0.5
+    gold_reward: 30
+    score_reward: 30
+    
+  boss:
+    hp: 500
+    speed: 0.75
+    gold_reward: 100
+    score_reward: 100
+
+projectiles:
+  basic:
+    speed: 5.0
+    
+  sniper:
+    speed: 10.0
+    
+  splash:
+    speed: 3.0
+
+waves:
+  spawn_interval_ticks: 180  # 3 seconds at 60 FPS
+  enemies_per_wave_base: 5
+  enemies_per_wave_multiplier: 1.2  # +20% per wave
+  hp_scale_per_wave: 1.15  # +15% HP per wave
+  
+  # Wave composition (percentage of enemy types)
+  early_waves:  # Waves 1-5
+    basic: 100
+    
+  mid_waves:  # Waves 6-10
+    basic: 70
+    fast: 30
+    
+  late_waves:  # Waves 11-20
+    basic: 40
+    fast: 40
+    tank: 20
+    
+  boss_waves:  # Every 10th wave
+    boss: 1
+    tank: 5
+    basic: 10
+
+# Map/Path configuration
+map:
+  width: 800
+  height: 500
+  path:
+    - { x: 0, y: 250 }
+    - { x: 200, y: 250 }
+    - { x: 200, y: 100 }
+    - { x: 400, y: 100 }
+    - { x: 400, y: 400 }
+    - { x: 600, y: 400 }
+    - { x: 600, y: 250 }
+    - { x: 800, y: 250 }
+  path_half_width: 20.0
+
+# Placement rules
+placement:
+  min_distance_from_path: 20.0
+  min_tower_spacing: 40.0
+  max_towers: 50

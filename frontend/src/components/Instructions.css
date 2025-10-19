@@ -1,0 +1,96 @@
+.instructions-container {
+  padding: 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  text-align: left;
+}
+
+.instructions-title {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  font-weight: bold;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.instructions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.instruction-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+}
+
+.instruction-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateX(4px);
+}
+
+.instruction-icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+.instruction-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.instruction-text strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.instructions-tip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, rgba(241, 196, 15, 0.15) 0%, rgba(243, 156, 18, 0.1) 100%);
+  border-radius: 8px;
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  font-size: 14px;
+  color: #f1c40f;
+  font-weight: 500;
+}
+
+.tip-icon {
+  font-size: 20px;
+}
+
+@media (max-width: 768px) {
+  .instructions-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .instruction-item {
+    padding: 12px;
+  }
+
+  .instruction-icon {
+    font-size: 24px;
+  }
+
+  .instruction-text {
+    font-size: 14px;
+  }
+}
