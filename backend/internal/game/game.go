@@ -91,15 +91,15 @@ func NewGame(id string, cfg *config.GameConfig) *Game {
 	game.waveSystem = systems.NewWaveSystem(cfg, factory, startPos)
 	
 	game.rewardSystem = systems.NewRewardSystem(func(gold, score int) {
-		game.mu.Lock()
-		defer game.mu.Unlock()
+		// Note: This callback is called from Update() which already holds the lock
+		// So we don't lock again to avoid deadlock
 		game.state.Gold += gold
 		game.state.Score += score
 	})
 	
 	game.lifecycleSystem = systems.NewLifecycleSystem(len(cfg.Map.Path), func(lives int) {
-		game.mu.Lock()
-		defer game.mu.Unlock()
+		// Note: This callback is called from Update() which already holds the lock
+		// So we don't lock again to avoid deadlock
 		game.state.Lives -= lives
 		if game.state.Lives <= 0 {
 			game.state.GameOver = true

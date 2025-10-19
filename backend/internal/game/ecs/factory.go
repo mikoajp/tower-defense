@@ -98,8 +98,38 @@ func (f *EntityFactory) CreateProjectile(projType string, pos Position, targetID
 
 // CreateEnemiesForWave creates all enemies for a given wave
 func (f *EntityFactory) CreateEnemiesForWave(wave int, startPos Position) ([]*EnemyEntity, error) {
+	// Calculate total number of enemies for this wave
+	totalEnemies := f.config.CalculateEnemiesForWave(wave)
 	composition := f.config.GetWaveComposition(wave)
 	enemies := []*EnemyEntity{}
+	
+	// Calculate total weight from composition percentages
+	totalWeight := composition.Basic + composition.Fast + composition.Tank + composition.Boss
+	if totalWeight == 0 {
+		totalWeight = 100 // Default if not specified
+		composition.Basic = 100
+	}
+	
+	// Calculate actual count for each enemy type based on percentages
+	basicCount := (totalEnemies * composition.Basic) / totalWeight
+	fastCount := (totalEnemies * composition.Fast) / totalWeight
+	tankCount := (totalEnemies * composition.Tank) / totalWeight
+	bossCount := (totalEnemies * composition.Boss) / totalWeight
+	
+	// Ensure at least totalEnemies are created (handle rounding)
+	currentTotal := basicCount + fastCount + tankCount + bossCount
+	if currentTotal < totalEnemies {
+		// Add remaining to the most common type
+		if composition.Basic > 0 {
+			basicCount += totalEnemies - currentTotal
+		} else if composition.Fast > 0 {
+			fastCount += totalEnemies - currentTotal
+		} else if composition.Tank > 0 {
+			tankCount += totalEnemies - currentTotal
+		} else {
+			bossCount += totalEnemies - currentTotal
+		}
+	}
 	
 	// Helper to create N enemies of a type
 	createN := func(enemyType string, count int) error {
@@ -113,24 +143,24 @@ func (f *EntityFactory) CreateEnemiesForWave(wave int, startPos Position) ([]*En
 		return nil
 	}
 	
-	// Create enemies based on composition
-	if composition.Basic > 0 {
-		if err := createN("basic", composition.Basic); err != nil {
+	// Create enemies based on calculated counts
+	if basicCount > 0 {
+		if err := createN("basic", basicCount); err != nil {
 			return nil, err
 		}
 	}
-	if composition.Fast > 0 {
-		if err := createN("fast", composition.Fast); err != nil {
+	if fastCount > 0 {
+		if err := createN("fast", fastCount); err != nil {
 			return nil, err
 		}
 	}
-	if composition.Tank > 0 {
-		if err := createN("tank", composition.Tank); err != nil {
+	if tankCount > 0 {
+		if err := createN("tank", tankCount); err != nil {
 			return nil, err
 		}
 	}
-	if composition.Boss > 0 {
-		if err := createN("boss", composition.Boss); err != nil {
+	if bossCount > 0 {
+		if err := createN("boss", bossCount); err != nil {
 			return nil, err
 		}
 	}

@@ -70,11 +70,6 @@ func (s *WaveSystem) spawnWave(world *ecs.World) {
 	if len(enemies) > 0 {
 		world.AddEntity(enemies[0])
 		s.remainingInWave--
-		// Store remaining enemies for later spawning
-		for i := 1; i < len(enemies); i++ {
-			// We'll spawn these over time
-			s.remainingInWave++
-		}
 		s.nextEnemySpawn = time.Now().Add(s.nextSpawnDelay())
 	}
 }

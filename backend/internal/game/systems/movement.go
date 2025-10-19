@@ -36,9 +36,9 @@ func (s *MovementSystem) Update(world *ecs.World, dt float64) {
 			continue
 		}
 		
-		// Check if enemy reached the end
+		// Check if enemy is beyond the path (let LifecycleSystem handle this)
 		if enemy.PathIndex >= len(s.path)-1 {
-			enemy.Alive = false
+			// Don't set Alive = false here - let LifecycleSystem handle life loss
 			continue
 		}
 		
@@ -53,9 +53,7 @@ func (s *MovementSystem) Update(world *ecs.World, dt float64) {
 		if distance < 1.0 {
 			// Reached waypoint, move to next
 			enemy.PathIndex++
-			if enemy.PathIndex >= len(s.path)-1 {
-				enemy.Alive = false
-			}
+			// Don't set Alive = false here - let LifecycleSystem handle it
 			continue
 		}
 		

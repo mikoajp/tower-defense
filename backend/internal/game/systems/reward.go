@@ -32,6 +32,8 @@ func (s *RewardSystem) Update(world *ecs.World, dt float64) {
 					"gold", enemy.GoldReward, 
 					"score", enemy.ScoreReward)
 			}
+			// Mark as dead after granting rewards
+			enemy.Alive = false
 		}
 	}
 }

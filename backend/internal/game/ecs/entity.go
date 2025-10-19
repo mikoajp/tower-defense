@@ -99,7 +99,7 @@ func (e *EnemyEntity) TakeDamage(damage int) {
 	e.HP -= damage
 	if e.HP <= 0 {
 		e.HP = 0
-		e.Alive = false
+		// Don't set Alive to false here - let RewardSystem detect death first
 	}
 }
 

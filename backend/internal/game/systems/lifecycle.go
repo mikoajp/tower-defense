@@ -25,11 +25,13 @@ func (s *LifecycleSystem) Update(world *ecs.World, dt float64) {
 
 	// Check for enemies that reached the end
 	for _, enemy := range enemies {
+		// Enemy reaches end when at or past the last path point (PathIndex is 0-based)
+		// pathLength is the number of points, so last valid index is pathLength-1
 		if enemy.Alive && enemy.PathIndex >= s.pathLength-1 {
 			enemy.Alive = false
 			if s.onLifeLost != nil {
 				s.onLifeLost(1)
-				logging.Warnw("enemy_reached_end", "enemy_id", enemy.ID)
+				logging.Warnw("enemy_reached_end", "enemy_id", enemy.ID, "path_index", enemy.PathIndex)
 			}
 		}
 	}
