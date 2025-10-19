@@ -7,7 +7,8 @@ A modern, full-stack tower defense game built with **Go** (backend) and **React 
 [![TypeScript](https://img.shields.io/badge/TypeScript-5+-3178C6?style=flat&logo=typescript)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-<img width="1470" height="764" alt="Zrzut ekranu 2025-10-19 o 12 46 57" src="https://github.com/user-attachments/assets/ecc0bbc7-2c13-4723-bc46-931fe32ec762" />
+![Uploading Zrzut ekranu 2025-10-19 o 17.16.10.png…]()
+
 
 
 ## ✨ Features
