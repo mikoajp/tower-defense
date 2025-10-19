@@ -7,6 +7,9 @@ import ConnectionStatus from './components/ConnectionStatus';
 import GameOverlay from './components/GameOverlay';
 import TowerSelector from './components/TowerSelector';
 import GameControls from './components/GameControls';
+import MapSelector from './components/MapSelector';
+import Toast from './components/Toast';
+import { useToast } from './hooks/useToast';
 import './App.css';
 
 export default function App() {
@@ -14,6 +17,7 @@ export default function App() {
   const [hudState, setHudState] = useState<GameState | null>(null);
   const [connected, setConnected] = useState(false);
   const [selectedTower, setSelectedTower] = useState<TowerType>('basic');
+  const { toasts, removeToast, showError, showSuccess, showWarning, showInfo } = useToast();
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -36,6 +40,7 @@ export default function App() {
         }
         console.log('🎮 Connected to game server');
         setConnected(true);
+        showSuccess('Connected to game server!');
       };
 
       ws.onmessage = (event) => {
@@ -54,6 +59,7 @@ export default function App() {
           setHudState(state);
         } catch (error) {
           console.error('Error parsing game state:', error);
+          showError('Failed to parse game data');
         }
       };
 
@@ -62,6 +68,7 @@ export default function App() {
 
         console.log('❌ Disconnected from server');
         setConnected(false);
+        showWarning('Disconnected from server. Reconnecting...');
 
         if (isComponentMounted) {
           reconnectTimeout = window.setTimeout(() => {
@@ -75,6 +82,7 @@ export default function App() {
 
       ws.onerror = (error) => {
         console.error('WebSocket error:', error);
+        showError('Connection error occurred');
       };
     };
 
@@ -106,23 +114,56 @@ export default function App() {
 
       if (!response.ok) {
         const data = await response.json();
-        alert(data.error || 'Failed to place tower');
+        const errorMsg = data.error || 'Failed to place tower';
+        
+        if (errorMsg.includes('not enough gold')) {
+          showError('Not enough gold!');
+        } else if (errorMsg.includes('invalid')) {
+          showError('Cannot place tower here!');
+        } else {
+          showError(errorMsg);
+        }
+      } else {
+        showSuccess(`${selectedTower.charAt(0).toUpperCase() + selectedTower.slice(1)} tower placed!`);
       }
     } catch (error) {
       console.error('Error placing tower:', error);
+      showError('Network error: Failed to place tower');
     }
   };
 
   const handleRestart = async () => {
     try {
-      await fetch(`${API_URL}/reset`, { method: 'POST' });
+      const response = await fetch(`${API_URL}/reset`, { method: 'POST' });
+      if (response.ok) {
+        showInfo('Game restarted!');
+      } else {
+        showError('Failed to restart game');
+      }
     } catch (e) {
       console.error('Failed to reset game', e);
+      showError('Network error: Failed to restart game');
     }
+  };
+
+  const handleMapChange = (_mapId: string, mapName: string) => {
+    showSuccess(`Map changed to: ${mapName}`);
   };
 
   return (
     <div className="app-container">
+      {/* Toast Notifications */}
+      <div className="toast-container">
+        {toasts.map((toast) => (
+          <Toast
+            key={toast.id}
+            message={toast.message}
+            type={toast.type}
+            onClose={() => removeToast(toast.id)}
+          />
+        ))}
+      </div>
+
       <header className="app-header">
         <h1 className="app-title">
           <span className="title-icon">🏰</span>
@@ -136,13 +177,18 @@ export default function App() {
           <div className="left-panel">
             {hudState && <HUD state={hudState} />}
             
+            <MapSelector onMapChange={handleMapChange} />
+            
             <TowerSelector
               selectedTower={selectedTower}
               onSelectTower={setSelectedTower}
               currentGold={hudState?.gold ?? 0}
             />
             
-            <GameControls />
+            <GameControls 
+              showSuccess={showSuccess}
+              showError={showError}
+            />
           </div>
 
           <div className="game-area">

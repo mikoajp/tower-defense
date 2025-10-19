@@ -41,19 +41,33 @@ const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
       const INTERPOLATION_DELAY = 120;
       const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
-      // Path definition
-      const path = [
-        { x: 0, y: 250 },
-        { x: 200, y: 250 },
-        { x: 200, y: 100 },
-        { x: 400, y: 100 },
-        { x: 400, y: 400 },
-        { x: 600, y: 400 },
-        { x: 600, y: 250 },
-        { x: 800, y: 250 },
-      ];
-
       const draw = () => {
+        // Path definition - use path from server state or fallback to default
+        const defaultPath = [
+          { x: 0, y: 250 },
+          { x: 200, y: 250 },
+          { x: 200, y: 100 },
+          { x: 400, y: 100 },
+          { x: 400, y: 400 },
+          { x: 600, y: 400 },
+          { x: 600, y: 250 },
+          { x: 800, y: 250 },
+        ];
+        
+        // Get path from the HUD state (most up-to-date)
+        const currentState = hudStateRef.current;
+        
+        // Debug logging (remove after testing)
+        const hasPath = currentState?.path && currentState.path.length > 0;
+        if (hasPath && currentState?.path && currentState.path.length !== 8) {
+          console.log('Using custom map path with', currentState.path.length, 'points');
+        }
+        
+        const path = hasPath && currentState?.path
+          ? currentState.path 
+          : defaultPath;
+        
+        const buf = bufferRef.current;
         // Clear with gradient background
         const bgGradient = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
         bgGradient.addColorStop(0, '#1a3a1a');
@@ -85,7 +99,7 @@ const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         ctx.beginPath();
-        path.forEach((p, i) => {
+        path.forEach((p: { x: number; y: number }, i: number) => {
           if (i === 0) ctx.moveTo(p.x, p.y);
           else ctx.lineTo(p.x, p.y);
         });
@@ -101,8 +115,7 @@ const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
         ctx.lineWidth = 40;
         ctx.stroke();
 
-        // Get interpolation frames
-        const buf = bufferRef.current;
+        // Get interpolation frames (buf already defined above)
         if (buf.length === 0) {
           rafIdRef.current = requestAnimationFrame(draw);
           return;
@@ -150,233 +163,315 @@ const GameCanvas = forwardRef<GameCanvasHandle, GameCanvasProps>(
           };
         });
 
-        // Draw towers with modern styling
+        // Draw towers with retro pixel styling
         next.state.towers.forEach((tower) => {
-          // Get tower type and color
           const towerType = tower.towerType || 'basic';
-          let towerColor = '#4A90E2'; // basic
-          let towerSize = 12;
           
-          if (towerType === 'sniper') {
-            towerColor = '#E24A4A';
-            towerSize = 10;
-          } else if (towerType === 'splash') {
-            towerColor = '#E2A44A';
-            towerSize = 14;
-          }
-
-          // Range indicator with pulse effect
-          const pulseScale = 1 + Math.sin(Date.now() / 500) * 0.05;
-          const rangeGradient = ctx.createRadialGradient(
-            tower.position.x,
-            tower.position.y,
-            0,
-            tower.position.x,
-            tower.position.y,
-            tower.range * pulseScale
-          );
-          const r = parseInt(towerColor.slice(1, 3), 16);
-          const g = parseInt(towerColor.slice(3, 5), 16);
-          const b = parseInt(towerColor.slice(5, 7), 16);
-          rangeGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.15)`);
-          rangeGradient.addColorStop(0.7, `rgba(${r}, ${g}, ${b}, 0.08)`);
-          rangeGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
-          ctx.fillStyle = rangeGradient;
+          // Range indicator (dotted circle)
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = 'rgba(255, 215, 0, 0.3)';
+          ctx.lineWidth = 1;
           ctx.beginPath();
-          ctx.arc(
-            tower.position.x,
-            tower.position.y,
-            tower.range * pulseScale,
-            0,
-            Math.PI * 2
-          );
-          ctx.fill();
-
-          // Tower base shadow
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-          ctx.shadowOffsetY = 2;
-
-          // Tower base
-          ctx.fillStyle = towerColor;
-          ctx.beginPath();
-          ctx.arc(tower.position.x, tower.position.y, towerSize, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Tower border
-          ctx.shadowBlur = 0;
-          ctx.strokeStyle = '#ffffff';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(tower.position.x, tower.position.y, towerSize, 0, Math.PI * 2);
+          ctx.arc(tower.position.x, tower.position.y, tower.range, 0, Math.PI * 2);
           ctx.stroke();
+          ctx.setLineDash([]);
 
-          // Tower turret with glow
-          ctx.shadowBlur = 15;
-          ctx.shadowColor = '#2196F3';
-          const turretGradient = ctx.createRadialGradient(
-            tower.position.x,
-            tower.position.y,
-            0,
-            tower.position.x,
-            tower.position.y,
-            12
-          );
-          turretGradient.addColorStop(0, '#64B5F6');
-          turretGradient.addColorStop(1, '#1976D2');
-          ctx.fillStyle = turretGradient;
-          ctx.beginPath();
-          ctx.arc(tower.position.x, tower.position.y, 12, 0, Math.PI * 2);
-          ctx.fill();
+          const x = tower.position.x;
+          const y = tower.position.y;
 
-          // Turret highlight
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-          ctx.beginPath();
-          ctx.arc(tower.position.x - 3, tower.position.y - 3, 4, 0, Math.PI * 2);
-          ctx.fill();
+          // Draw different tower types
+          if (towerType === 'basic') {
+            // Basic Tower - Castle turret style
+            ctx.fillStyle = '#6b6b6b';
+            ctx.fillRect(x - 12, y - 8, 24, 16); // Base
+            
+            ctx.fillStyle = '#4a4a4a';
+            ctx.fillRect(x - 10, y - 12, 6, 8); // Left battlement
+            ctx.fillRect(x + 4, y - 12, 6, 8); // Right battlement
+            
+            ctx.fillStyle = '#8b8b8b';
+            ctx.fillRect(x - 12, y - 8, 24, 4); // Highlight
+            
+            // Cannon
+            ctx.fillStyle = '#2c2c2c';
+            ctx.fillRect(x - 2, y - 4, 10, 4);
+            
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - 12, y - 8, 24, 16);
+            
+          } else if (towerType === 'sniper') {
+            // Sniper Tower - Tall thin tower with long barrel
+            ctx.fillStyle = '#8b4513';
+            ctx.fillRect(x - 8, y - 16, 16, 24); // Tall base
+            
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(x - 8, y - 16, 16, 4); // Top
+            
+            ctx.fillStyle = '#a0522d';
+            ctx.fillRect(x - 6, y - 14, 12, 2); // Highlight
+            
+            // Long sniper barrel
+            ctx.fillStyle = '#2c2c2c';
+            ctx.fillRect(x - 2, y - 6, 16, 3);
+            
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - 8, y - 16, 16, 24);
+            
+          } else if (towerType === 'splash') {
+            // Splash Tower - Round mortar style
+            ctx.fillStyle = '#cd7f32'; // Bronze
+            ctx.beginPath();
+            ctx.arc(x, y, 14, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#8b6914';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, 14, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Mortar opening
+            ctx.fillStyle = '#2c2c2c';
+            ctx.beginPath();
+            ctx.arc(x, y - 4, 6, 0, Math.PI * 2);
+            ctx.fill();
+            
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.arc(x, y - 4, 6, 0, Math.PI * 2);
+            ctx.stroke();
+            
+            // Decorative bands
+            ctx.strokeStyle = '#8b6914';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, 10, 0, Math.PI * 2);
+            ctx.stroke();
+          }
         });
 
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
-        // Draw enemies with modern styling
+        // Draw enemies with retro pixel styling
         enemies.forEach((enemy) => {
-          // Get enemy type and properties
           const enemyType = enemy.enemyType || 'basic';
-          let enemyColor1 = '#ff6b6b';
-          let enemyColor2 = '#c0392b';
-          let enemySize = 12;
-          
-          if (enemyType === 'fast') {
-            enemyColor1 = '#4ecdc4';
-            enemyColor2 = '#26a69a';
-            enemySize = 10;
+          const x = enemy.position.x;
+          const y = enemy.position.y;
+
+          // Draw different enemy types
+          if (enemyType === 'basic') {
+            // Basic Enemy - Goblin/Orc style
+            ctx.fillStyle = '#228b22'; // Green body
+            ctx.fillRect(x - 8, y - 8, 16, 16);
+            
+            // Eyes
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(x - 5, y - 4, 3, 3);
+            ctx.fillRect(x + 2, y - 4, 3, 3);
+            
+            // Teeth
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(x - 4, y + 2, 2, 3);
+            ctx.fillRect(x + 2, y + 2, 2, 3);
+            
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - 8, y - 8, 16, 16);
+            
+          } else if (enemyType === 'fast') {
+            // Fast Enemy - Wolf/Beast style
+            ctx.fillStyle = '#4169e1'; // Blue body
+            
+            // Body (horizontal oval shape)
+            ctx.beginPath();
+            ctx.ellipse(x, y, 12, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            
+            // Head
+            ctx.fillStyle = '#4169e1';
+            ctx.beginPath();
+            ctx.arc(x + 8, y, 6, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            
+            // Eyes (glowing)
+            ctx.fillStyle = '#ffff00';
+            ctx.fillRect(x + 6, y - 2, 2, 2);
+            ctx.fillRect(x + 10, y - 2, 2, 2);
+            
           } else if (enemyType === 'tank') {
-            enemyColor1 = '#95a5a6';
-            enemyColor2 = '#7f8c8d';
-            enemySize = 16;
+            // Tank Enemy - Armored knight style
+            ctx.fillStyle = '#696969'; // Gray armor
+            ctx.fillRect(x - 12, y - 12, 24, 24);
+            
+            ctx.fillStyle = '#2f4f4f'; // Dark accents
+            ctx.fillRect(x - 10, y - 10, 20, 4); // Top
+            ctx.fillRect(x - 10, y + 6, 20, 4); // Bottom
+            
+            // Visor
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(x - 8, y - 2, 16, 4);
+            
+            // Highlights
+            ctx.fillStyle = '#a9a9a9';
+            ctx.fillRect(x - 12, y - 12, 4, 24);
+            
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - 12, y - 12, 24, 24);
+            
           } else if (enemyType === 'boss') {
-            enemyColor1 = '#9b59b6';
-            enemyColor2 = '#8e44ad';
-            enemySize = 20;
+            // Boss Enemy - Dragon/Demon style
+            ctx.fillStyle = '#8b008b'; // Purple body
+            
+            // Main body
+            ctx.fillRect(x - 16, y - 12, 32, 24);
+            
+            // Horns
+            ctx.fillStyle = '#4b0082';
+            ctx.beginPath();
+            ctx.moveTo(x - 16, y - 12);
+            ctx.lineTo(x - 20, y - 20);
+            ctx.lineTo(x - 12, y - 12);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.moveTo(x + 16, y - 12);
+            ctx.lineTo(x + 20, y - 20);
+            ctx.lineTo(x + 12, y - 12);
+            ctx.fill();
+            
+            // Eyes (glowing red)
+            ctx.fillStyle = '#ff0000';
+            ctx.fillRect(x - 10, y - 6, 4, 4);
+            ctx.fillRect(x + 6, y - 6, 4, 4);
+            
+            // Mouth
+            ctx.fillStyle = '#000';
+            ctx.fillRect(x - 8, y + 2, 16, 4);
+            
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x - 16, y - 12, 32, 24);
           }
 
-          // Enemy shadow
-          ctx.shadowBlur = 8;
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-          ctx.shadowOffsetY = 3;
-
-          // Enemy body gradient
-          const enemyGradient = ctx.createRadialGradient(
-            enemy.position.x - 3,
-            enemy.position.y - 3,
-            0,
-            enemy.position.x,
-            enemy.position.y,
-            enemySize
-          );
-          enemyGradient.addColorStop(0, enemyColor1);
-          enemyGradient.addColorStop(1, enemyColor2);
-          ctx.fillStyle = enemyGradient;
-          ctx.beginPath();
-          ctx.arc(enemy.position.x, enemy.position.y, enemySize, 0, Math.PI * 2);
-          ctx.fill();
-
-          // Enemy border
-          ctx.shadowBlur = 0;
-          ctx.strokeStyle = 'rgba(0, 0, 0, 0.5)';
-          ctx.lineWidth = 2;
-          ctx.beginPath();
-          ctx.arc(enemy.position.x, enemy.position.y, enemySize, 0, Math.PI * 2);
-          ctx.stroke();
-
-          // HP bar background
+          // HP bar
+          const enemySize = enemyType === 'boss' ? 20 : enemyType === 'tank' ? 16 : enemyType === 'fast' ? 12 : 12;
           const barWidth = enemySize * 2 + 4;
-          const barY = enemy.position.y - enemySize - 8;
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-          ctx.fillRect(enemy.position.x - barWidth / 2, barY, barWidth, 5);
-
+          const barY = y - enemySize - 10;
+          
+          // HP bar background
+          ctx.fillStyle = '#000';
+          ctx.fillRect(x - barWidth / 2, barY, barWidth, 6);
+          
           // HP bar fill
           const hpPercent = enemy.hp / enemy.maxHp;
-          let hpColor = '#2ecc71'; // green
+          let hpColor = '#00ff00'; // Bright green
           if (hpPercent < 0.3) {
-            hpColor = '#e74c3c'; // red
+            hpColor = '#ff0000'; // Bright red
           } else if (hpPercent < 0.6) {
-            hpColor = '#f1c40f'; // yellow
+            hpColor = '#ffff00'; // Bright yellow
           }
           
           ctx.fillStyle = hpColor;
-          ctx.fillRect(enemy.position.x - barWidth / 2, barY, barWidth * hpPercent, 5);
-
+          ctx.fillRect(x - barWidth / 2 + 1, barY + 1, (barWidth - 2) * hpPercent, 4);
+          
           // HP bar border
           ctx.strokeStyle = '#fff';
           ctx.lineWidth = 1;
-          ctx.strokeRect(enemy.position.x - 18, enemy.position.y - 28, 36, 6);
+          ctx.strokeRect(x - barWidth / 2, barY, barWidth, 6);
         });
 
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 
-        // Draw projectiles with glow trail
+        // Draw projectiles with retro pixel styling
         projectiles.forEach((proj) => {
-          ctx.shadowBlur = 12;
-          ctx.shadowColor = '#f39c12';
-
-          const projGradient = ctx.createRadialGradient(
-            proj.position.x,
-            proj.position.y,
-            0,
-            proj.position.x,
-            proj.position.y,
-            6
-          );
-          projGradient.addColorStop(0, '#ffd700');
-          projGradient.addColorStop(0.5, '#f39c12');
-          projGradient.addColorStop(1, '#e67e22');
-          ctx.fillStyle = projGradient;
+          const x = proj.position.x;
+          const y = proj.position.y;
+          
+          // Outer glow
+          ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
           ctx.beginPath();
-          ctx.arc(proj.position.x, proj.position.y, 6, 0, Math.PI * 2);
+          ctx.arc(x, y, 8, 0, Math.PI * 2);
           ctx.fill();
-
-          // Highlight
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+          
+          // Main projectile body (diamond shape)
+          ctx.fillStyle = '#ffd700';
           ctx.beginPath();
-          ctx.arc(proj.position.x - 2, proj.position.y - 2, 2, 0, Math.PI * 2);
+          ctx.moveTo(x, y - 5);
+          ctx.lineTo(x + 5, y);
+          ctx.lineTo(x, y + 5);
+          ctx.lineTo(x - 5, y);
+          ctx.closePath();
           ctx.fill();
+          
+          // Inner core
+          ctx.fillStyle = '#ffff00';
+          ctx.beginPath();
+          ctx.moveTo(x, y - 3);
+          ctx.lineTo(x + 3, y);
+          ctx.lineTo(x, y + 3);
+          ctx.lineTo(x - 3, y);
+          ctx.closePath();
+          ctx.fill();
+          
+          // Border
+          ctx.strokeStyle = '#000';
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(x, y - 5);
+          ctx.lineTo(x + 5, y);
+          ctx.lineTo(x, y + 5);
+          ctx.lineTo(x - 5, y);
+          ctx.closePath();
+          ctx.stroke();
         });
-
-        ctx.shadowBlur = 0;
 
         // Draw game over overlay
         if (hudStateRef.current?.gameOver) {
-          ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
+          ctx.fillStyle = 'rgba(0, 0, 0, 0.9)';
           ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
-          // Game over text with glow
-          ctx.shadowBlur = 20;
-          ctx.shadowColor = '#e74c3c';
-          ctx.fillStyle = '#e74c3c';
-          ctx.font = 'bold 56px Arial, sans-serif';
+          // Retro "GAME OVER" text with pixel font effect
+          ctx.fillStyle = '#ff0000';
+          ctx.font = '48px "Press Start 2P", monospace';
           ctx.textAlign = 'center';
+          
+          // Text shadow for depth
+          ctx.fillStyle = '#000';
+          ctx.fillText('GAME OVER', CANVAS_WIDTH / 2 + 4, CANVAS_HEIGHT / 2 - 16);
+          
+          ctx.fillStyle = '#ff0000';
           ctx.fillText('GAME OVER', CANVAS_WIDTH / 2, CANVAS_HEIGHT / 2 - 20);
 
-          ctx.shadowBlur = 10;
-          ctx.shadowColor = '#3498db';
-          ctx.fillStyle = '#3498db';
-          ctx.font = 'bold 28px Arial, sans-serif';
+          // Score with retro styling
+          ctx.fillStyle = '#000';
+          ctx.font = '20px "Press Start 2P", monospace';
           ctx.fillText(
-            `Final Score: ${hudStateRef.current.score}`,
+            `Score: ${hudStateRef.current.score}`,
+            CANVAS_WIDTH / 2 + 3,
+            CANVAS_HEIGHT / 2 + 33
+          );
+          
+          ctx.fillStyle = '#ffd700';
+          ctx.fillText(
+            `Score: ${hudStateRef.current.score}`,
             CANVAS_WIDTH / 2,
             CANVAS_HEIGHT / 2 + 30
           );
 
-          ctx.shadowBlur = 0;
-          ctx.fillStyle = '#95a5a6';
-          ctx.font = '18px Arial, sans-serif';
+          // Restart message
+          ctx.fillStyle = '#8b7355';
+          ctx.font = '12px "Press Start 2P", monospace';
           ctx.fillText(
-            'Click "Restart" to play again',
+            'Press RESTART to try again',
             CANVAS_WIDTH / 2,
             CANVAS_HEIGHT / 2 + 70
           );

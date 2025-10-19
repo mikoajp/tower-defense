@@ -1,21 +1,11 @@
 .game-canvas {
-  border: 4px solid #2c3e50;
-  border-radius: 12px;
   cursor: crosshair;
   background: #1a3a1a;
-  box-shadow: 
-    0 10px 30px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.game-canvas:hover {
-  transform: translateY(-2px);
-  box-shadow: 
-    0 15px 40px rgba(0, 0, 0, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.15) inset;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
 }
 
 .game-canvas:active {
-  transform: translateY(0);
+  cursor: pointer;
 }

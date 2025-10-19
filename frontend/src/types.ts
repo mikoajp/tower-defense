@@ -43,6 +43,9 @@ export interface GameState {
   lives: number;
   score: number;
   gameOver: boolean;
+  path?: Position[];
+  mapWidth?: number;
+  mapHeight?: number;
 }
 
 export type TowerType = 'basic' | 'sniper' | 'splash';

@@ -172,6 +172,71 @@ func main() {
 		
 		c.JSON(http.StatusOK, gin.H{"success": true, "message": "Game loaded"})
 	}
+	
+	// Map handlers
+	listMaps := func(c *gin.Context) {
+		mapIDs := gameconfig.ListMaps()
+		maps := make([]gin.H, 0, len(mapIDs))
+		
+		for _, id := range mapIDs {
+			mapCfg, err := gameconfig.GetMapConfig(id)
+			if err != nil {
+				continue
+			}
+			maps = append(maps, gin.H{
+				"id":          id,
+				"name":        mapCfg.Name,
+				"difficulty":  mapCfg.Difficulty,
+				"description": mapCfg.Description,
+				"pathLength":  len(mapCfg.Path),
+			})
+		}
+		
+		c.JSON(http.StatusOK, gin.H{
+			"maps": maps,
+		})
+	}
+	
+	changeMap := func(c *gin.Context) {
+		var req struct {
+			MapID string `json:"mapId"`
+		}
+		if err := c.BindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		
+		if req.MapID == "" {
+			req.MapID = "classic"
+		}
+		
+		// Stop the current game
+		defaultGame.Stop()
+		
+		// Create new game with selected map
+		newGame := game.NewGameWithMap("default", gameCfg, req.MapID)
+		
+		// Replace the default game
+		gameManager.ReplaceDefaultGame(newGame)
+		defaultGame = newGame
+		defaultGame.Start()
+		
+		// Update metrics hook
+		defaultGame.SetOnTick(func(st game.TickStats) {
+			server.TicksTotal.Inc()
+			server.EngineEnemies.Set(float64(st.Enemies))
+			server.EngineProjectiles.Set(float64(st.Projectiles))
+			server.EngineTowers.Set(float64(st.Towers))
+			server.EngineTickSeconds.Observe(st.Dt)
+		})
+		
+		mapCfg, _ := gameconfig.GetMapConfig(req.MapID)
+		c.JSON(http.StatusOK, gin.H{
+			"success": true,
+			"message": "Map changed successfully",
+			"map":     mapCfg.Name,
+		})
+	}
 
 	// wire Prometheus metrics via on-tick hook
 	defaultGame.SetOnTick(func(st game.TickStats) {
@@ -182,7 +247,7 @@ func main() {
 		server.EngineTickSeconds.Observe(st.Dt)
 	})
 
-	r := server.NewRouter(wsHandler, addTower, getState, reset, saveGame, loadGame, createGame, listGames, cfg.AllowedOrigins)
+	r := server.NewRouter(wsHandler, addTower, getState, reset, saveGame, loadGame, createGame, listGames, listMaps, changeMap, cfg.AllowedOrigins)
 	// plug request logger is already in router; nothing else needed here
 	// optional debug pprof
 	server.MountPprof(r, cfg.EnablePprof)

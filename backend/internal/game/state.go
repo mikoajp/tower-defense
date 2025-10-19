@@ -18,6 +18,9 @@ type GameStateSnapshot struct {
 	Lives       int             `json:"lives"`
 	Score       int             `json:"score"`
 	GameOver    bool            `json:"gameOver"`
+	Path        []PosDTO        `json:"path"`
+	MapWidth    int             `json:"mapWidth"`
+	MapHeight   int             `json:"mapHeight"`
 }
 
 // TowerDTO is the data transfer object for towers

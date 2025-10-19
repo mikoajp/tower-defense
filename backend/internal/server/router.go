@@ -39,7 +39,7 @@ func CORS(allowedOrigins []string) gin.HandlerFunc {
 }
 
 // NewRouter wires up the HTTP routes.
-func NewRouter(wsHandler gin.HandlerFunc, addTower gin.HandlerFunc, getState gin.HandlerFunc, reset gin.HandlerFunc, saveGame gin.HandlerFunc, loadGame gin.HandlerFunc, createGame gin.HandlerFunc, listGames gin.HandlerFunc, allowedOrigins []string) *gin.Engine {
+func NewRouter(wsHandler gin.HandlerFunc, addTower gin.HandlerFunc, getState gin.HandlerFunc, reset gin.HandlerFunc, saveGame gin.HandlerFunc, loadGame gin.HandlerFunc, createGame gin.HandlerFunc, listGames gin.HandlerFunc, listMaps gin.HandlerFunc, changeMap gin.HandlerFunc, allowedOrigins []string) *gin.Engine {
 	r := gin.New()
 	// logging + recovery
 	r.Use(RequestLogger(), gin.Recovery())
@@ -58,6 +58,8 @@ func NewRouter(wsHandler gin.HandlerFunc, addTower gin.HandlerFunc, getState gin
 		v1.POST("/load", loadGame)
 		v1.POST("/games", createGame)
 		v1.GET("/games", listGames)
+		v1.GET("/maps", listMaps)
+		v1.POST("/map", changeMap)
 	}
 
 	// Legacy routes (backward compatibility)
@@ -67,6 +69,8 @@ func NewRouter(wsHandler gin.HandlerFunc, addTower gin.HandlerFunc, getState gin
 	r.POST("/reset", reset)
 	r.POST("/save", saveGame)
 	r.POST("/load", loadGame)
+	r.GET("/maps", listMaps)
+	r.POST("/map", changeMap)
 
 	// websocket (keep legacy path)
 	r.GET("/ws", wsHandler)

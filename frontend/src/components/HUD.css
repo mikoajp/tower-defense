@@ -1,108 +1,118 @@
 .hud-container {
-  background: rgba(0, 0, 0, 0.7);
-  border-radius: 12px;
-  padding: 20px;
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  background: #1a0f08;
+  padding: 12px;
+  border: 4px solid #8b6f47;
+  border-top-color: #d4af6a;
+  border-left-color: #d4af6a;
+  border-right-color: #3d2817;
+  border-bottom-color: #3d2817;
+  box-shadow: 
+    inset 0 0 0 2px #654321,
+    0 4px 0 #1a0f08,
+    0 6px 8px rgba(0,0,0,0.8);
 }
 
 .hud-stat {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  margin-bottom: 12px;
-  transition: all 0.2s ease;
+  gap: 8px;
+  padding: 8px;
+  background: #0d0704;
+  border: 3px solid;
+  margin-bottom: 8px;
+  transition: all 0.1s ease;
+  position: relative;
 }
 
 .hud-stat:last-of-type {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .hud-stat:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
 }
 
 .hud-stat.wave {
-  border-left: 3px solid #3498db;
+  border-color: #4169e1;
+  box-shadow: 0 0 8px rgba(65, 105, 225, 0.5);
 }
 
 .hud-stat.gold {
-  border-left: 3px solid #f1c40f;
+  border-color: #ffd700;
+  box-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
 }
 
 .hud-stat.lives {
-  border-left: 3px solid #e74c3c;
+  border-color: #dc143c;
+  box-shadow: 0 0 8px rgba(220, 20, 60, 0.5);
 }
 
 .hud-stat.score {
-  border-left: 3px solid #2ecc71;
+  border-color: #32cd32;
+  box-shadow: 0 0 8px rgba(50, 205, 50, 0.5);
 }
 
 .hud-icon {
-  font-size: 28px;
+  font-size: 20px;
   line-height: 1;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  filter: drop-shadow(2px 2px 0 #000);
 }
 
 .hud-content {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .hud-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 8px;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(255, 255, 255, 0.6);
+  letter-spacing: 1px;
+  color: #8b7355;
 }
 
 .hud-value {
-  font-size: 20px;
-  font-weight: 700;
-  color: #ffffff;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+  font-weight: 400;
+  color: #f4e4c1;
+  text-shadow: 
+    1px 1px 0 #000,
+    2px 2px 4px rgba(0,0,0,0.8);
 }
 
 .hud-stats-summary {
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 8px;
+  border-top: 2px solid #654321;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 .stat-detail {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.8);
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 6px;
+  gap: 6px;
+  font-size: 8px;
+  color: #c4a676;
+  padding: 6px;
+  background: #0d0704;
+  border: 2px solid #654321;
 }
 
 .stat-detail-icon {
-  font-size: 16px;
+  font-size: 10px;
 }
 
 .stat-detail-label {
   flex: 1;
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .stat-detail-value {
-  font-weight: 700;
-  color: #fff;
+  font-weight: 400;
+  color: #f4e4c1;
 }
 
 @media (max-width: 768px) {

@@ -5,13 +5,22 @@ import './GameControls.css';
 interface GameControlsProps {
   onSaveSuccess?: () => void;
   onLoadSuccess?: () => void;
+  showSuccess?: (msg: string) => void;
+  showError?: (msg: string) => void;
 }
 
-export default function GameControls({ onSaveSuccess, onLoadSuccess }: GameControlsProps) {
+export default function GameControls({ onSaveSuccess, onLoadSuccess, showSuccess, showError }: GameControlsProps) {
   const [savedState, setSavedState] = useState<string | null>(null);
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const showMessage = (text: string, type: 'success' | 'error') => {
+    // Use toast notifications if available
+    if (type === 'success' && showSuccess) {
+      showSuccess(text);
+    } else if (type === 'error' && showError) {
+      showError(text);
+    }
+    // Also show inline message
     setMessage({ text, type });
     setTimeout(() => setMessage(null), 3000);
   };
@@ -71,7 +80,10 @@ export default function GameControls({ onSaveSuccess, onLoadSuccess }: GameContr
   };
 
   const handleReset = async () => {
-    if (!confirm('Are you sure you want to reset the game? All progress will be lost.')) {
+    // Show a retro-style confirmation using native confirm for now
+    // In a full implementation, you could create a custom modal
+    const confirmed = window.confirm('Reset game? All progress will be lost!');
+    if (!confirmed) {
       return;
     }
 

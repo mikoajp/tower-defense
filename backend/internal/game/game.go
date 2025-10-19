@@ -55,17 +55,43 @@ type TickStats struct {
 
 // NewGame creates a new game instance
 func NewGame(id string, cfg *config.GameConfig) *Game {
+	return NewGameWithMap(id, cfg, "classic")
+}
+
+// NewGameWithMap creates a new game instance with a specific map
+func NewGameWithMap(id string, cfg *config.GameConfig, mapID string) *Game {
 	world := ecs.NewWorld()
 	factory := ecs.NewEntityFactory(cfg)
 	systemManager := systems.NewSystemManager()
 	
-	// Get start position from config
+	// Load map configuration
+	mapCfg, err := config.GetMapConfig(mapID)
+	if err != nil {
+		logging.Warnw("failed to load map, using default", "map_id", mapID, "error", err)
+		mapCfg = cfg.Map
+	} else {
+		// Override main config map with selected map
+		cfg.Map = mapCfg
+	}
+	
+	// Get start position from map
 	startPos := ecs.Position{X: 0, Y: 250}
-	if len(cfg.Map.Path) > 0 {
+	if len(mapCfg.Path) > 0 {
 		startPos = ecs.Position{
-			X: cfg.Map.Path[0].X,
-			Y: cfg.Map.Path[0].Y,
+			X: mapCfg.Path[0].X,
+			Y: mapCfg.Path[0].Y,
 		}
+	}
+	
+	// Use map-specific starting values or fall back to config defaults
+	startingGold := mapCfg.StartingGold
+	if startingGold == 0 {
+		startingGold = cfg.Game.StartingGold
+	}
+	
+	startingLives := mapCfg.StartingLives
+	if startingLives == 0 {
+		startingLives = cfg.Game.StartingLives
 	}
 	
 	game := &Game{
@@ -76,8 +102,8 @@ func NewGame(id string, cfg *config.GameConfig) *Game {
 		systemManager: systemManager,
 		state: GameState{
 			Wave:     0,
-			Gold:     cfg.Game.StartingGold,
-			Lives:    cfg.Game.StartingLives,
+			Gold:     startingGold,
+			Lives:    startingLives,
 			Score:    0,
 			GameOver: false,
 		},
@@ -287,6 +313,12 @@ func (g *Game) GetState() GameStateSnapshot {
 	g.mu.RLock()
 	defer g.mu.RUnlock()
 	
+	// Convert path to DTOs
+	path := make([]PosDTO, len(g.config.Map.Path))
+	for i, p := range g.config.Map.Path {
+		path[i] = PosDTO{X: p.X, Y: p.Y}
+	}
+	
 	return GameStateSnapshot{
 		Towers:      g.convertTowers(),
 		Enemies:     g.convertEnemies(),
@@ -296,6 +328,9 @@ func (g *Game) GetState() GameStateSnapshot {
 		Lives:       g.state.Lives,
 		Score:       g.state.Score,
 		GameOver:    g.state.GameOver,
+		Path:        path,
+		MapWidth:    g.config.Map.Width,
+		MapHeight:   g.config.Map.Height,
 	}
 }
 

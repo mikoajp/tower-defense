@@ -7,7 +7,7 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-//go:embed balance.yaml
+//go:embed balance.yaml maps.yaml
 var configFS embed.FS
 
 // GameConfig represents the entire game configuration
@@ -66,10 +66,19 @@ type WaveComposition struct {
 }
 
 type MapConfig struct {
+	Name          string         `yaml:"name"`
+	Difficulty    string         `yaml:"difficulty"`
+	Description   string         `yaml:"description"`
 	Width         int            `yaml:"width"`
 	Height        int            `yaml:"height"`
 	Path          []Position     `yaml:"path"`
 	PathHalfWidth float64        `yaml:"path_half_width"`
+	StartingGold  int            `yaml:"starting_gold"`
+	StartingLives int            `yaml:"starting_lives"`
+}
+
+type MapsConfig struct {
+	Maps map[string]MapConfig `yaml:"maps"`
 }
 
 type Position struct {
@@ -85,6 +94,7 @@ type PlacementConfig struct {
 
 // Global config instance
 var Config *GameConfig
+var Maps *MapsConfig
 
 // Load reads and parses the balance configuration
 func Load() (*GameConfig, error) {
@@ -98,7 +108,19 @@ func Load() (*GameConfig, error) {
 		return nil, fmt.Errorf("failed to parse config: %w", err)
 	}
 
+	// Load maps configuration
+	mapsData, err := configFS.ReadFile("maps.yaml")
+	if err != nil {
+		return nil, fmt.Errorf("failed to read maps file: %w", err)
+	}
+
+	var mapsCfg MapsConfig
+	if err := yaml.Unmarshal(mapsData, &mapsCfg); err != nil {
+		return nil, fmt.Errorf("failed to parse maps: %w", err)
+	}
+
 	Config = &cfg
+	Maps = &mapsCfg
 	return &cfg, nil
 }
 
@@ -166,4 +188,30 @@ func (c *GameConfig) ScaleEnemyHP(baseHP int, wave int) int {
 	scale := c.Waves.HPScalePerWave
 	scaled := float64(baseHP) * (1 + (float64(wave-1) * (scale - 1)))
 	return int(scaled)
+}
+
+// GetMapConfig returns config for a map by ID
+func GetMapConfig(mapID string) (MapConfig, error) {
+	if Maps == nil {
+		return MapConfig{}, fmt.Errorf("maps not loaded")
+	}
+	
+	mapCfg, ok := Maps.Maps[mapID]
+	if !ok {
+		return MapConfig{}, fmt.Errorf("unknown map: %s", mapID)
+	}
+	return mapCfg, nil
+}
+
+// ListMaps returns all available map IDs
+func ListMaps() []string {
+	if Maps == nil {
+		return []string{}
+	}
+	
+	maps := make([]string, 0, len(Maps.Maps))
+	for id := range Maps.Maps {
+		maps = append(maps, id)
+	}
+	return maps
 }

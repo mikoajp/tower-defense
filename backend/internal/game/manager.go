@@ -80,6 +80,22 @@ func (m *Manager) GetOrCreateDefault() *Game {
 	return game
 }
 
+// ReplaceDefaultGame replaces the default game instance
+func (m *Manager) ReplaceDefaultGame(newGame *Game) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	
+	defaultID := "default"
+	
+	// Stop old game if exists
+	if oldGame, exists := m.games[defaultID]; exists {
+		oldGame.Stop()
+	}
+	
+	m.games[defaultID] = newGame
+	logging.Infow("default_game_replaced", "game_id", defaultID)
+}
+
 // RemoveGame removes a game instance
 func (m *Manager) RemoveGame(gameID string) error {
 	m.mu.Lock()
