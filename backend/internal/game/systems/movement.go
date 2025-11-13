@@ -3,7 +3,7 @@ package systems
 import (
 	"math"
 
-	"tower-defense/internal/game/config"
+	"tower-defense/internal/repository/config"
 	"tower-defense/internal/game/ecs"
 )
 

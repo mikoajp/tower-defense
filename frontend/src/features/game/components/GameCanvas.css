@@ -1,0 +1,11 @@
+.game-canvas {
+  cursor: crosshair;
+  background: #1a3a1a;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  display: block;
+}
+
+.game-canvas:active {
+  cursor: pointer;
+}

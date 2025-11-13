@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"tower-defense/internal/game/config"
+	"tower-defense/internal/repository/config"
 	"tower-defense/internal/game/ecs"
 	"tower-defense/internal/logging"
 )

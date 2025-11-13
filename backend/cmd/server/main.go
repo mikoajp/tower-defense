@@ -10,12 +10,15 @@ import (
 
 	"tower-defense/internal/config"
 	"tower-defense/internal/game"
-	gameconfig "tower-defense/internal/game/config"
+	gameconfig "tower-defense/internal/repository/config"
 	"tower-defense/internal/logging"
-	"tower-defense/internal/server"
+	"tower-defense/internal/app/router"
+	"tower-defense/internal/infrastructure/websocket"
+	"tower-defense/internal/infrastructure/metrics"
+	"tower-defense/internal/infrastructure/profiling"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
+	ws "github.com/gorilla/websocket"
 )
 
 func main() {
@@ -40,7 +43,7 @@ func main() {
 	defaultGame.Start()
 
 	// Prepare websocket upgrader with origin check
-	upgrader := websocket.Upgrader{
+	upgrader := ws.Upgrader{
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
 			for _, ao := range cfg.AllowedOrigins {
@@ -52,7 +55,7 @@ func main() {
 
 	// Handlers
 	// WebSocket hub setup
-	hub := server.NewHub()
+	hub := websocket.NewHub()
 	go hub.Run()
 
 	// Broadcaster: encode state once and distribute to clients
@@ -75,8 +78,8 @@ func main() {
 	}()
 
 	wsHandler := gin.HandlerFunc(func(c *gin.Context) {
-		server.WsConnections.Inc()
-		defer server.WsConnections.Dec()
+		metrics.WsConnections.Inc()
+		defer metrics.WsConnections.Dec()
 		serverHandler := hub.ServeWS(upgrader)
 		serverHandler(c.Writer, c.Request)
 		return // no JSON write here
@@ -223,11 +226,11 @@ func main() {
 		
 		// Update metrics hook
 		defaultGame.SetOnTick(func(st game.TickStats) {
-			server.TicksTotal.Inc()
-			server.EngineEnemies.Set(float64(st.Enemies))
-			server.EngineProjectiles.Set(float64(st.Projectiles))
-			server.EngineTowers.Set(float64(st.Towers))
-			server.EngineTickSeconds.Observe(st.Dt)
+			metrics.TicksTotal.Inc()
+			metrics.EngineEnemies.Set(float64(st.Enemies))
+			metrics.EngineProjectiles.Set(float64(st.Projectiles))
+			metrics.EngineTowers.Set(float64(st.Towers))
+			metrics.EngineTickSeconds.Observe(st.Dt)
 		})
 		
 		mapCfg, _ := gameconfig.GetMapConfig(req.MapID)
@@ -240,17 +243,17 @@ func main() {
 
 	// wire Prometheus metrics via on-tick hook
 	defaultGame.SetOnTick(func(st game.TickStats) {
-		server.TicksTotal.Inc()
-		server.EngineEnemies.Set(float64(st.Enemies))
-		server.EngineProjectiles.Set(float64(st.Projectiles))
-		server.EngineTowers.Set(float64(st.Towers))
-		server.EngineTickSeconds.Observe(st.Dt)
+		metrics.TicksTotal.Inc()
+		metrics.EngineEnemies.Set(float64(st.Enemies))
+		metrics.EngineProjectiles.Set(float64(st.Projectiles))
+		metrics.EngineTowers.Set(float64(st.Towers))
+		metrics.EngineTickSeconds.Observe(st.Dt)
 	})
 
-	r := server.NewRouter(wsHandler, addTower, getState, reset, saveGame, loadGame, createGame, listGames, listMaps, changeMap, cfg.AllowedOrigins)
+	r := router.NewRouter(wsHandler, addTower, getState, reset, saveGame, loadGame, createGame, listGames, listMaps, changeMap, cfg.AllowedOrigins)
 	// plug request logger is already in router; nothing else needed here
 	// optional debug pprof
-	server.MountPprof(r, cfg.EnablePprof)
+	profiling.MountPprof(r, cfg.EnablePprof)
 
 	httpSrv := &http.Server{
 		Addr:    cfg.Port,

@@ -1,0 +1,72 @@
+.game-overlay-container {
+  margin-bottom: 16px;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.restart-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #2a1810;
+  color: #f4e4c1;
+  border: 4px solid #32cd32;
+  border-top-color: #32cd32;
+  border-left-color: #32cd32;
+  border-right-color: #1e7e1e;
+  border-bottom-color: #1e7e1e;
+  cursor: pointer;
+  font-size: 10px;
+  font-weight: 400;
+  box-shadow: 
+    inset 0 0 0 2px #1a0f08,
+    0 0 12px rgba(50, 205, 50, 0.5);
+  transition: all 0.1s ease;
+  letter-spacing: 1px;
+}
+
+.restart-button:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 
+    inset 0 0 0 2px #1a0f08,
+    2px 2px 0 #000,
+    0 0 16px rgba(50, 205, 50, 0.7);
+  background: #3a2820;
+}
+
+.restart-button:active {
+  transform: translate(0, 0);
+  box-shadow: 
+    inset 0 0 0 2px #1a0f08,
+    0 0 12px rgba(50, 205, 50, 0.5);
+}
+
+.restart-icon {
+  font-size: 12px;
+  animation: rotate 2s linear infinite;
+  filter: drop-shadow(1px 1px 0 #000);
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.restart-button:hover .restart-icon {
+  animation-duration: 0.6s;
+}

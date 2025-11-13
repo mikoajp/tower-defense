@@ -70,49 +70,110 @@ npm install
 
 ## 📁 Project Structure
 
+### Backend (Clean Architecture)
+
 ```
-tower-defense/
-├── backend/                    # Go backend
-│   ├── cmd/
-│   │   └── server/
-│   │       └── main.go         # Application entry point
-│   ├── internal/
-│   │   ├── config/             # Environment configuration
-│   │   ├── game/               # Game logic layer
-│   │   │   ├── config/         # YAML config loader
-│   │   │   ├── ecs/            # ECS entities (Tower, Enemy, Projectile)
-│   │   │   ├── systems/        # ECS-style game systems
-│   │   │   ├── repository/     # Persistence layer
-│   │   │   ├── manager.go      # Multi-room game manager
-│   │   │   ├── game.go         # Single game instance
-│   │   │   └── state.go        # Game state DTOs
-│   │   ├── logging/            # Structured logging
-│   │   └── server/             # HTTP/WebSocket server
-│   │       ├── router.go       # API routes
-│   │       ├── ws_hub.go       # WebSocket hub pattern
-│   │       └── metrics.go      # Prometheus metrics
-│   ├── api/
-│   │   └── openapi.yaml        # OpenAPI specification
-│   ├── go.mod
-│   └── go.sum
+backend/
+├── cmd/
+│   └── server/
+│       └── main.go              # Application entry point
 │
-├── frontend/                   # React + TypeScript frontend
-│   ├── src/
-│   │   ├── components/         # React components (8 total)
-│   │   │   ├── GameCanvas.tsx  # Canvas rendering
-│   │   │   ├── HUD.tsx         # Statistics display
-│   │   │   ├── TowerSelector.tsx # Tower type picker
-│   │   │   ├── GameControls.tsx  # Save/Load/Reset controls
-│   │   │   ├── ConnectionStatus.tsx # WebSocket status
-│   │   │   ├── GameOverlay.tsx # Game over screen
-│   │   │   └── Instructions.tsx # How to play
-│   │   ├── App.tsx             # Main application
-│   │   ├── types.ts            # TypeScript interfaces
-│   │   └── config.ts           # API configuration
-│   ├── package.json
-│   └── vite.config.ts
+├── internal/
+│   ├── app/                     # Application layer
+│   │   ├── router/              # HTTP routing
+│   │   │   └── router.go
+│   │   └── middleware/          # HTTP middleware
+│   │       ├── logging.go
+│   │       └── cors.go
+│   │
+│   ├── infrastructure/          # Infrastructure layer
+│   │   ├── websocket/           # WebSocket Hub pattern
+│   │   │   └── hub.go
+│   │   ├── metrics/             # Prometheus metrics
+│   │   │   └── metrics.go
+│   │   └── profiling/           # pprof endpoints
+│   │       └── pprof.go
+│   │
+│   ├── game/                    # Game Engine (ECS Architecture)
+│   │   ├── ecs/                 # Entity Component System
+│   │   │   ├── entity.go        # Entity definitions
+│   │   │   ├── factory.go       # Entity factory
+│   │   │   └── world.go         # World state
+│   │   ├── systems/             # ECS Systems
+│   │   │   ├── movement.go      # Movement system
+│   │   │   ├── combat.go        # Combat system
+│   │   │   ├── projectile.go    # Projectile system
+│   │   │   ├── wave.go          # Wave spawning system
+│   │   │   ├── reward.go        # Reward system
+│   │   │   └── lifecycle.go     # Entity lifecycle
+│   │   ├── game.go              # Game instance orchestrator
+│   │   ├── manager.go           # Multi-game manager
+│   │   └── state.go             # Game state DTOs
+│   │
+│   ├── repository/              # Persistence layer
+│   │   ├── game/                # Game state repository
+│   │   │   ├── repository.go
+│   │   │   ├── memory.go
+│   │   │   └── file.go
+│   │   └── config/              # Configuration loader
+│   │       ├── loader.go        # YAML config loader
+│   │       ├── balance.yaml     # Game balance config
+│   │       └── maps.yaml        # Map configurations
+│   │
+│   ├── config/                  # App configuration
+│   │   └── config.go
+│   └── logging/                 # Structured logging
+│       └── logger.go
 │
-└── README.md                   # This file
+├── api/
+│   └── openapi.yaml             # OpenAPI specification
+├── go.mod
+└── go.sum
+```
+
+### Frontend (Feature-Based Architecture)
+
+```
+frontend/
+├── src/
+│   ├── app/                     # Main application
+│   │   ├── App.tsx
+│   │   └── App.css
+│   │
+│   ├── features/                # Feature modules
+│   │   ├── game/                # Game feature
+│   │   │   └── components/
+│   │   │       ├── GameCanvas.tsx
+│   │   │       ├── GameOverlay.tsx
+│   │   │       └── GameControls.tsx
+│   │   ├── hud/                 # HUD feature
+│   │   │   └── components/
+│   │   │       ├── HUD.tsx
+│   │   │       └── TowerSelector.tsx
+│   │   ├── maps/                # Maps feature
+│   │   │   └── components/
+│   │   │       └── MapSelector.tsx
+│   │   └── connection/          # Connection status
+│   │       └── components/
+│   │           └── ConnectionStatus.tsx
+│   │
+│   ├── shared/                  # Shared resources
+│   │   ├── components/
+│   │   │   └── ui/              # UI components
+│   │   │       ├── Toast.tsx
+│   │   │       └── Instructions.tsx
+│   │   ├── hooks/               # Shared hooks
+│   │   │   └── useToast.ts
+│   │   └── config/              # Configuration
+│   │       └── config.ts
+│   │
+│   ├── types.ts                 # TypeScript interfaces
+│   └── main.tsx                 # Entry point
+│
+├── index.html
+├── package.json
+├── vite.config.ts
+└── tsconfig.json
 ```
 
 ---
@@ -147,9 +208,9 @@ tower-defense/
 
 ## 🔧 Configuration
 
-### Game Balance (internal/game/config/balance.yaml)
+### Game Balance
 
-Edit `backend/internal/game/config/balance.yaml` to adjust game balance:
+Edit `backend/internal/repository/config/balance.yaml` to adjust game balance:
 
 ```yaml
 towers:
@@ -223,7 +284,7 @@ GET  /ws                     # WebSocket connection
 
 ### Adding New Tower Types
 
-1. Edit `backend/internal/game/config/balance.yaml`:
+1. Edit `backend/internal/repository/config/balance.yaml`:
 ```yaml
 towers:
   - id: laser
@@ -239,7 +300,7 @@ towers:
 
 ### Adding New Enemy Types
 
-1. Edit `backend/internal/game/config/balance.yaml`:
+1. Edit `backend/internal/repository/config/balance.yaml`:
 ```yaml
 enemies:
   - id: flying
@@ -262,44 +323,53 @@ Multi-map support can be implemented by:
 
 ## 📊 Architecture Highlights
 
-### Backend Architecture
+### Backend Architecture (Clean Architecture + ECS)
 
 ```
-┌─────────────────────────────────────────┐
-│           HTTP/WebSocket Layer          │
-│  (Gin Router + Gorilla WebSocket Hub)  │
-└────────────────┬────────────────────────┘
-                 │
-┌────────────────▼────────────────────────┐
-│          Game Manager Layer             │
-│   (Multi-room, lifecycle management)   │
-└────────────────┬────────────────────────┘
-                 │
-┌────────────────▼────────────────────────┐
-│         Game Instance (ECS)             │
-│  ┌──────────────────────────────────┐  │
-│  │  Systems:                         │  │
-│  │  • Movement  • Combat             │  │
-│  │  • Wave      • Projectile         │  │
-│  │  • Reward    • Lifecycle          │  │
-│  └──────────────────────────────────┘  │
-│  ┌──────────────────────────────────┐  │
-│  │  State (Entities + Game Data)    │  │
-│  └──────────────────────────────────┘  │
-└────────────────┬────────────────────────┘
-                 │
-┌────────────────▼────────────────────────┐
-│    Domain Layer (Pure Types)            │
-│   Tower, Enemy, Projectile, State      │
-└─────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                   Application Layer                      │
+│          (Router, Middleware, HTTP Handlers)            │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│                Infrastructure Layer                      │
+│   WebSocket Hub  │  Metrics  │  Profiling  │  Logging  │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│               Game Manager (Multi-room)                  │
+│           (Lifecycle, instance management)              │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│              Game Engine (ECS Pattern)                   │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  Systems Layer:                                   │  │
+│  │  • Movement    • Combat      • Projectile        │  │
+│  │  • Wave        • Reward      • Lifecycle         │  │
+│  └──────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │  ECS World (Entity Component System):            │  │
+│  │  • Entities (Tower, Enemy, Projectile)           │  │
+│  │  • Factory (Dynamic creation from config)        │  │
+│  └──────────────────────────────────────────────────┘  │
+└────────────────────────┬────────────────────────────────┘
+                         │
+┌────────────────────────▼────────────────────────────────┐
+│                 Repository Layer                         │
+│   Config Loader  │  Game State Repository               │
+│   (YAML configs) │  (Memory, File, Database-ready)      │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ### Key Design Patterns
 
-- **ECS (Entity Component System)**: Game logic split into focused systems
-- **Repository Pattern**: Abstract persistence layer
-- **Factory Pattern**: Dynamic entity creation from config
-- **Hub Pattern**: WebSocket broadcast to multiple clients
+- **Clean Architecture**: Separation of concerns across layers (App, Infrastructure, Game, Repository)
+- **ECS (Entity Component System)**: Game logic split into focused, reusable systems
+- **Repository Pattern**: Abstract persistence layer (memory, file, database-ready)
+- **Factory Pattern**: Dynamic entity creation from YAML configuration
+- **Hub Pattern**: Efficient WebSocket broadcast to multiple clients
+- **Feature-Based Frontend**: Modular React architecture with shared components
 - **Dependency Injection**: Components receive dependencies via constructors
 
 ### Performance Characteristics
@@ -359,6 +429,8 @@ http_request_duration_seconds      # Request duration histogram
 - [x] Save/Load system
 - [x] Multi-room support
 - [x] Modern frontend UI
+- [x] **Clean Architecture refactoring** (Infrastructure, App, Repository layers)
+- [x] **Feature-based frontend** organization
 
 ### 🚧 In Progress
 - [ ] Comprehensive test coverage (>80%)

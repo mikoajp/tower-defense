@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	gameconfig "tower-defense/internal/game/config"
+	gameconfig "tower-defense/internal/repository/config"
 )
 
 // EntityFactory creates entities based on configuration

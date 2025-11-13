@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"sync"
 
-	"tower-defense/internal/game/config"
+	"tower-defense/internal/repository/config"
 	"tower-defense/internal/logging"
 	"github.com/google/uuid"
 )
